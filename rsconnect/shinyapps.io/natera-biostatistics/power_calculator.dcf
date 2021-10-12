@@ -1,0 +1,13 @@
+name: power_calculator
+title:
+username:
+account: natera-biostatistics
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 4653464
+bundleId: 5033852
+url: https://natera-biostatistics.shinyapps.io/power_calculator/
+when: 1631662048.18607
+lastSyncTime: 1631662048.18608
+asMultiple: FALSE
+asStatic: FALSE

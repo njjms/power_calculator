@@ -1,5 +1,5 @@
-# This Shiny web application uses the nicks package which can be found here:
-# https://github.com/njjms/nicks and can be copied via git clone
+# This Shiny web application uses my personal R package "nicks"
+# This package can be downloaded via devtools::install_github("njjms/nicks")
 
 library(shiny)
 library(shinyWidgets)
@@ -23,8 +23,7 @@ ui <- fluidPage(
                 choices = list("≥" = 1,
                                "≤" = 2),
                 selected = 1
-                ),
-                #selected = 1),
+            ),
             conditionalPanel(
               condition = 'input.direction == 1',
               numericInput(
@@ -243,9 +242,9 @@ server <- function(input, output, session) {
         curve_plot_data$curve_plot_data$requirement <- rep(input$requirement,
                                                            nrow(curve_plot_data$curve_plot_data))
         curve_plot_data$curve_plot_data$true_p <- rep(input$true_p,
-                                                           nrow(curve_plot_data$curve_plot_data))
+                                                      nrow(curve_plot_data$curve_plot_data))
         curve_plot_data$curve_plot_data$alpha <- rep(input$alpha,
-                                                           nrow(curve_plot_data$curve_plot_data))
+                                                     nrow(curve_plot_data$curve_plot_data))
         curve_plot_data$curve_plot_data
       }
     },
