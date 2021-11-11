@@ -1,9 +1,10 @@
-# This Shiny web application uses my personal R package "nicks"
-# This package can be downloaded via devtools::install_github("njjms/nicks")
+# This Shiny web application uses the Natera "biostatslib" R package
+# This package can be downloaded via devtools::install_git("ssh://git@stash.natera.com:7999/~nsun/biostatslib.git")
+# Must be connected to the VPN and have SSH keys enabled on Natera stash account 
 
 library(shiny)
 library(shinyWidgets)
-library(nicks)
+library(biostatslib)
 library(tidyverse)
 library(plotly)
 library(DT)
