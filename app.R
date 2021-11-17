@@ -42,39 +42,32 @@ ui <- dashboardPage(
                                      "≤" = 2),
                       selected = 1
                   ),
-                  conditionalPanel(
-                    condition = 'input.direction == 1',
-                    numericInput(
-                        inputId = "gt_requirement",
-                        label = "Specified Requirement",
-                        value = .95
-                    )
-                  ),
-                  conditionalPanel(
-                    condition = 'input.direction == 2',
-                    numericInput(
-                        inputId = "lt_requirement",
-                        label = "Specified Requirement",
-                        value = .039
-                    )
-                  ),
-                  #
-                  # Input true probability value
-                  #
                   numericInput(
-                      inputId = "true_p",
-                      label = "True Probability",
-                      value = .95
+                    inputId = "requirement",
+                    label = "Specified Requirement",
+                    value = .95,
+                    min = 0,
+                    max = 1,
+                    step = 0.01
+                  ),
+                  #
+                  # Input true probability vector
+                  #
+                  textInput(
+                    inputId = "true_p",
+                    label = "True Probability (comma-separated)",
+                    value = "0.95",
                   ),
                   #
                   # Select the significance level
                   #
-                  sliderInput(
+                  numericInput(
                     inputId = "alpha",
                     label = "Significance Level",
-                    min = .01,
+                    min = .0000000001,
                     max = .2,
-                    value = .1
+                    value = .05,
+                    step = 0.005
                   ),
                   helpText("Note: This is for 2-sided intervals."),
                   #
@@ -83,7 +76,9 @@ ui <- dashboardPage(
                   numericInput(
                     inputId = "n_minimum",
                     label = "Minimum sample size",
-                    value = 5
+                    value = 5,
+                    min = 1,
+                    step = 1
                   ),
                   #
                   # Select maximum sample size
@@ -91,7 +86,9 @@ ui <- dashboardPage(
                   numericInput(
                     inputId = "n_maximum",
                     label = "Maximum sample size",
-                    value = 100
+                    value = 100,
+                    min = 1,
+                    step = 1
                   ),
                   #
                   # Select step size
@@ -99,26 +96,41 @@ ui <- dashboardPage(
                   numericInput(
                     inputId = "step",
                     label = "Step size",
-                    value = 1
+                    value = 1,
+                    min = 1,
+                    step = 1
                   ),
                   #
                   # Select the hypothesis test methods to compare
                   #
-                  checkboxGroupInput(inputId = "tests",
-                                     label = "Hypothesis Test Methods",
-                                     choices = list("Wilson-Score" = 1,
-                                                    "Clopper-Pearson" = 2,
-                                                    "RBT" = 3),
-                                     selected = c(1)),
-                  h5("Confidence Interval Options"),
-                  checkboxInput(inputId = "intervalSurpasses",
-                                label = "Lower Bound Surpasses",
-                                value = FALSE),
-                  checkboxInput(inputId = "pointSurpasses",
-                                label = "Point Estimate Surpasses",
-                                value = FALSE),
+                  radioButtons(inputId = "test",
+                               label = "Hypothesis Test Method",
+                               choices = list("Wilson-Score" = 1,
+                                              "Clopper-Pearson" = 2),
+                               selected = 1),
+                  selectInput(inputId = "AC_type",
+                              label="Acceptance Criteria Risk Level",
+                              choices = list("Low" = 1,
+                                             "Medium" = 2,
+                                             "High" = 3,
+                                             "High Delta" = 4),
+                              selected = 2),
+                  conditionalPanel(
+                    condition = "input.AC_type == 4",
+                    numericInput(
+                      inputId = "prq_delta",
+                      label = "Specified Requirement \u00B1 \u03B4",
+                      value = .94,
+                      step = 0.01,
+                      min = 0,
+                      max = 1
+                    )
+                  ),
                   actionButton(inputId = "run_calculation",
-                               label = "Calculate")
+                               label = "Calculate"),
+                  h5("Plot Options"),
+                  checkboxInput(inputId = "VerboseTitle", label = "Include Test Type in Title"),
+                  checkboxInput(inputId = "FlipY", label = "Flip Y-Axis")
               ),
               mainPanel(
                  plotlyOutput(outputId = "curvePlot"),
@@ -140,31 +152,24 @@ ui <- dashboardPage(
                                       "≤" = 2),
                        selected = 1
                    ),
-                   conditionalPanel(
-                     condition = 'input.direction2 == 1',
-                     numericInput(
-                         inputId = "gt_requirement2",
+                   numericInput(
+                         inputId = "requirement2",
                          label = "Specified Requirement",
-                         value = .95
-                     )
-                   ),
-                   conditionalPanel(
-                     condition = 'input.direction2 == 2',
-                     numericInput(
-                         inputId = "lt_requirement2",
-                         label = "Specified Requirement",
-                         value = .039
-                     )
+                         value = .95,
+                         min = 0,
+                         max = 1,
+                         step = 0.01
                    ),
                   #
                   # Select the significance level
                   #
-                  sliderInput(
+                  numericInput(
                     inputId = "alpha2",
                     label = "Significance Level",
-                    min = .01,
+                    min = .0000000001,
                     max = .2,
-                    value = .1
+                    value = .05,
+                    step = 0.005
                   ),
                   helpText("Note: This is for 2-sided intervals."),
                   #
@@ -196,20 +201,34 @@ ui <- dashboardPage(
                   #
                   # Effect size hypothesis test options
                   #
-                  radioButtons(inputId = "tests2",
-                               label = "Hypothesis Test Methods",
+                  radioButtons(inputId = "test2",
+                               label = "Hypothesis Test Method",
                                choices = list("Wilson-Score" = 1,
                                               "Clopper-Pearson" = 2),
-                               selected = c(1)),
-                  h5("Confidence Interval Options"),
-                  checkboxInput(inputId = "intervalSurpasses2",
-                                label = "Lower Bound Surpasses",
-                                value = FALSE),
-                  checkboxInput(inputId = "pointSurpasses2",
-                                label = "Point Estimate Surpasses",
-                                value = FALSE),
+                               selected = 1),
+                  selectInput(inputId = "AC_type2",
+                              label="Acceptance Criteria Risk Level",
+                              choices = list("Low" = 1,
+                                             "Medium" = 2,
+                                             "High" = 3,
+                                             "High Delta" = 4),
+                              selected = 2),
+                  conditionalPanel(
+                    condition = "input.AC_type2 == 4",
+                    numericInput(
+                      inputId = "prq_delta2",
+                      label = "Specified Requirement \u00B1 \u03B4",
+                      value = .94,
+                      step = 0.01,
+                      min = 0,
+                      max = 1
+                    )
+                  ),
                   actionButton(inputId = "run_calculation2",
-                               label = "Calculate")
+                               label = "Calculate"),
+                  h5("Plot Options"),
+                  checkboxInput(inputId = "VerboseTitle2", label = "Include Test Type in Title"),
+                  checkboxInput(inputId = "FlipY2", label = "Flip Y-Axis")
                 ),
                 mainPanel(
                    plotlyOutput(outputId = "curvePlot2"),
@@ -234,167 +253,167 @@ server <- function(input, output, session) {
   #
   curve_plot_data <- reactiveValues(curve_plot_data =
                                       data.frame(
-                                        sample_sizes = numeric(),
+                                        requirement_type= character(),
+                                        requirement = numeric(),
+                                        sample_size = numeric(),
+                                        true_prob = numeric(),
                                         power = numeric(),
-                                        test = character()
+                                        test = character(),
+                                        alpha_2_sided = character(),
+                                        AC_type = character()
                                       ))
 
   curve_plot_data2 <- reactiveValues(curve_plot_data2 =
                                       data.frame(
+                                        requirement_type= character(),
                                         requirement = numeric(),
-                                        true_probs = numeric(),
+                                        sample_size = numeric(),
+                                        true_prob = numeric(),
                                         power = numeric(),
                                         test = character(),
-                                        sample_size = numeric()
+                                        alpha_2_sided = character(),
+                                        AC_type = character()
                                       ))
 
   #
   # Sample size calculator server components
   #
+  
+  selected_true_ps <- reactiveValues(true_ps = 0.95)
   requirement <- reactiveValues(requirement = NA)
-  requirement_direction <- reactiveValues(requirement_direction = NA)
+  requirement_type <- reactiveValues(requirement_type = NA)
+  test_type <- reactiveValues(test_type = "ws")
+  AC_type <- reactiveValues(AC_type = "medium")
+  prq_delta <- reactiveValues(prq_delta = 0.94)
+  ACtext <- reactiveValues(title = "")
+  ACtext <- reactiveValues(subtitle = "")
+  
 
   observeEvent(
     input$run_calculation, {
-      requirement_direction$requirement_direction <- input$direction
-      requirement_type <- if_else(requirement_direction$requirement_direction == 1, "gt", "lt")
-      requirement$requirement <- if_else(requirement_type == "gt", input$gt_requirement, input$lt_requirement)
-      sample_sizes <- seq(input$n_minimum,
-                          input$n_maximum,
-                          by = input$step)
-      hypothesis_tests <- input$tests
+      requirement_type$requirement_type <- if_else(input$direction == 1, "gt", "lt")
+      requirement$requirement <- input$requirement
+      prq_delta$prq_delta <- input$prq_delta
+      test_type$test_type <- case_when(input$test == 1 ~ "ws", input$test == 2 ~ "cp")
+      AC_type$AC_type <- case_when(input$AC_type == 1 ~ "low", 
+                                   input$AC_type == 2 ~ "medium",
+                                   input$AC_type == 3 ~ "high", 
+                                   input$AC_type == 4 ~ "high_delta")
+      ACtext$title <- case_when(input$AC_type == 1 ~  paste("AC:",ifelse(input$direction == 1, "UCL \u2265", "LCL \u2264"),input$requirement),
+                                input$AC_type == 2 ~ paste("AC: PE",ifelse(input$direction == 1, "\u2265", "\u2264"),input$requirement),
+                                input$AC_type == 3 ~ paste("AC:",ifelse(input$direction == 1, "LCL \u2265", "UCL \u2264"),input$requirement),
+                                input$AC_type == 4 ~ paste("AC:",ifelse(input$direction == 1, "LCL \u2265", "UCL \u2264"),input$prq_delta,
+                                                           "and PE",ifelse(input$direction == 1, "\u2265", "\u2264"),input$requirement))
+      ACtext$subtitle=paste0(", ",ifelse(test_type$test_type=="ws","Wilson-Score","Clopper-Pearson"),
+                             " Interval, 2-sided \u03B1=",input$alpha)
+      
+      selected_true_ps$true_ps <- as.numeric(trimws(unlist(strsplit(input$true_p,","))))
+      selected_true_ps$true_ps <- selected_true_ps$true_ps[!is.na(selected_true_ps$true_ps)]
+      sample_sizes <- seq(input$n_minimum, input$n_maximum, by=input$step)
       add_curve_plot_data <- list()
-      for (test in hypothesis_tests) {
-        if (test == "1") {
-          ws_power_calc <- sapply(sample_sizes,
-                                  FUN = function(x) {
-                                    power_calc(sample_size = x,
-                                      true_prob = input$true_p,
-                                      requirement = requirement$requirement,
-                                      alpha= input$alpha,
-                                      requirement_type= requirement_type,
-                                      interval_type="ws",
-                                      interval_surpasses=input$intervalSurpasses,
-                                      point_surpasses = input$pointSurpasses)$power
-                                  })
-          ws_power_df <- data.frame(
-                n = sample_sizes,
-                power = ws_power_calc,
-                test = rep("Wilson-Score",
-                           length(sample_sizes))
+      
+      withProgress(message="Calculating Power",value=0,{
+        for(truep in selected_true_ps$true_ps){ 
+          incProgress(1/length(selected_true_ps$true_ps)) 
+          pow <- sapply(sample_sizes,
+                        FUN = function(x) {
+                          pw = power_calc(sample_size = x,
+                                     true_prob = truep,
+                                     requirement = requirement$requirement,
+                                     alpha = input$alpha,
+                                     requirement_type = requirement_type$requirement_type,
+                                     interval_type = test_type$test_type,
+                                     AC_type = AC_type$AC_type,
+                                     prq_delta = prq_delta$prq_delta)$power
+                          return(pw)
+                        })
+          tmp_power_df <- data.frame(
+            requirement_type = rep(requirement_type$requirement_type,length(sample_sizes)),
+            requirement = rep(requirement$requirement,length(sample_sizes)),
+            sample_size = sample_sizes,
+            true_prob = rep(truep,length(sample_sizes)),
+            power = pow,
+            test = rep(ifelse(test_type$test_type=="ws","Wilson-Score","Clopper-Pearson"),
+                       length(sample_sizes)),
+            alpha_2_sided = rep(input$alpha,length(sample_sizes)),
+            AC_type = rep(AC_type$AC_type,length(sample_sizes))
           )
-          add_curve_plot_data[[length(add_curve_plot_data) + 1]] <- ws_power_df
+          add_curve_plot_data$curve_plot_data[[length(add_curve_plot_data$curve_plot_data) + 1]] <- tmp_power_df
         }
-        if (test == "2") {
-          cp_power_calc <- sapply(sample_sizes,
-                                  FUN = function(x) {
-                                    power_calc(sample_size = x,
-                                      true_prob = input$true_p,
-                                      requirement = requirement$requirement,
-                                      alpha= input$alpha,
-                                      requirement_type = requirement_type,
-                                      interval_type = "cp",
-                                      interval_surpasses = input$intervalSurpasses,
-                                      point_surpasses = input$pointSurpasses)$power
-                                  })
-        cp_power_df <- data.frame(
-              n = sample_sizes,
-              power = cp_power_calc,
-              test = rep("Clopper-Pearson",
-                         length(sample_sizes))
-        )
-          add_curve_plot_data[[length(add_curve_plot_data) + 1]] <- cp_power_df
-        }
-        if (test == "3") {
-          rbt_power_calc <- sapply(sample_sizes,
-                                   FUN = function(x) {
-                                     rbt_power_calc(
-                                       sample_size = x,
-                                       true_p = input$true_p,
-                                       requirement = requirement$requirement,
-                                       alpha= input$alpha,
-                                       requirement_type = requirement_type
-                                     )$power
-                                  })
-          rbt_power_df <- data.frame(
-                n = sample_sizes,
-                power = rbt_power_calc,
-                test = rep("RBT", length(sample_sizes))
-          )
-          add_curve_plot_data[[length(add_curve_plot_data) + 1]] <- rbt_power_df
-        }
-      }
-      add_curve_plot_data <- dplyr::bind_rows(add_curve_plot_data)
-      curve_plot_data$curve_plot_data <- add_curve_plot_data
-      },
-    ignoreNULL = TRUE,
-    ignoreInit = TRUE
+      })
+      
+      curve_plot_data$curve_plot_data <- dplyr::bind_rows(add_curve_plot_data$curve_plot_data)
+     },
+     ignoreNULL = TRUE,
+     ignoreInit = TRUE
   )
 
-    output$curvePlot <- renderPlotly({
-      validate(
-        need(input$n_minimum <= input$n_maximum,
-             'Minimum sample size must be less than or equal to the maximum sample size.'),
-        need(dplyr::between(input$gt_requirement, 0, 1),
-             'Requirement must be between 0 and 1'),
-        need(dplyr::between(input$lt_requirement, 0, 1),
-             'Requirement must be between 0 and 1'),
-        need(dplyr::between(input$true_p, 0, 1),
-             'True probability must be between 0 and 1')
-      )
-      if (nrow(curve_plot_data$curve_plot_data) == 0) {
-        p <- ggplot() +
-          scale_x_continuous("n",
-                             limits = c(input$n_minimum,
-                                        input$n_maximum)) +
-          scale_y_continuous("Probability of Rejection",
-                             limits = c(0, 1)) +
-          theme(
-            legend.position = "none",
-            panel.grid.minor.x = element_blank()
+  output$curvePlot <- renderPlotly({
+    validate(
+      need(input$n_minimum <= input$n_maximum,
+           'Minimum sample size must be less than or equal to the maximum sample size.'),
+      need(dplyr::between(input$requirement, 0, 1),
+           'Requirement must be between 0 and 1'),
+      need(all(dplyr::between(selected_true_ps$true_ps, 0, 1)),
+          'True probabilities must be between 0 and 1')
+    )
+    if (nrow(curve_plot_data$curve_plot_data) == 0) {
+      p <- ggplot() +
+        scale_x_continuous("Sample Size",
+                           limits = c(input$n_minimum,
+                                      input$n_maximum)) +
+        scale_y_continuous(ifelse(input$FlipY,"Pr(Pass AC)","Pr(Fail AC)"),
+                           limits = c(0, 1)) +
+        theme(
+          legend.position = "none",
+          panel.grid.minor.x = element_blank()
+        )
+      ggplotly(p)
+    } else {
+      p<- ggplot(curve_plot_data$curve_plot_data) +
+      	    geom_line(mapping = aes(x=sample_size,
+      	                            y=if(input$FlipY){1-power}else{power},
+      	                            color=as.factor(true_prob))) +
+            labs(y = ifelse(input$FlipY,"Pr(Pass AC)","Pr(Fail AC)"),
+                 x = "Sample Size",
+                 title = if(input$VerboseTitle){
+                   paste0(ACtext$title,ACtext$subtitle)}else{
+                     ACtext$title}) +
+      	    theme_bw()
+      ggplotly(p) %>%
+        layout(
+          legend = list(
+            title = list(text="True Probability",side="left"),
+            orientation = "h",
+            x=0.5,
+            xanchor="center",
+            y = -.2
           )
-        ggplotly(p)
-      } else {
-        p<- ggplot(curve_plot_data$curve_plot_data) +
-        	    geom_line(mapping = aes(x=n,
-        	                            y=power,
-        	                            color=test)) +
-              labs(y = "Probability of Rejection") +
-        	    theme_bw()
-        ggplotly(p) %>%
-          layout(
-            legend = list(
-              title = "test",
-              orientation = "h",
-              x = .4,
-              y = -.2
-            )
-          )
-      }
-    })
-    output$curvePlotData <- DT::renderDataTable({
-      if (nrow(curve_plot_data$curve_plot_data) == 0) {
-        data.frame(
-          sample_sizes = numeric(),
-          power = numeric(),
-          test = character())
-      } else {
-        curve_plot_data$curve_plot_data$requirement <- rep(input$requirement,
-                                                           nrow(curve_plot_data$curve_plot_data))
-        curve_plot_data$curve_plot_data$true_p <- rep(input$true_p,
-                                                      nrow(curve_plot_data$curve_plot_data))
-        curve_plot_data$curve_plot_data$alpha <- rep(input$alpha,
-                                                     nrow(curve_plot_data$curve_plot_data))
-        curve_plot_data$curve_plot_data
-      }
-    },
-    extensions = c("Buttons", "Scroller"),
-    options = list(
-      dom = 'Bfrtip',
-      deferRender = TRUE,
-      scrollY = 400,
-      scroller = TRUE,
-      buttons = c('copy', 'csv', 'excel')
+        )
+    }
+  })
+  output$curvePlotData <- DT::renderDataTable({
+    if (nrow(curve_plot_data$curve_plot_data) == 0) {
+      data.frame(
+        requirement_type= character(),
+        requirement = numeric(),
+        sample_size = numeric(),
+        true_prob = numeric(),
+        power = numeric(),
+        test = character(),
+        alpha_2_sided = character(),
+        AC_type = character())
+    } else {
+      curve_plot_data$curve_plot_data
+    }
+  },
+  extensions = c("Buttons", "Scroller"),
+  options = list(
+    dom = 'Bfrtip',
+    deferRender = TRUE,
+    scrollY = 400,
+    scroller = TRUE,
+    buttons = c('copy', 'csv', 'excel')
     )
   )
 
@@ -405,109 +424,135 @@ server <- function(input, output, session) {
   true_probs <- reactiveValues(true_probs = vector(mode = "numeric"))
   requirement2 <- reactiveValues(requirement2 = .95)
   requirement_type2 <- reactiveValues(requirement_type2 = NA)
-  test_type <- reactiveValues(test_type = "ws")
+  test_type2 <- reactiveValues(test_type2 = "ws")
+  AC_type2 <- reactiveValues(AC_type2 = "medium")
+  prq_delta2 <- reactiveValues(prq_delta2 = 0.94)
+  ACtext2 <- reactiveValues(title = "")
 
   observeEvent(
     input$run_calculation2, {
       requirement_type2$requirement_type2 <- if_else(input$direction2 == 1, "gt", "lt")
-      test_type$test_type <- case_when(input$tests2 == 1 ~ "ws", input$tests2 == 2 ~ "cp")
+      requirement2$requirement2 <- input$requirement2
+      prq_delta2$prq_delta2 <- input$prq_delta2
+      test_type2$test_type2 <- case_when(input$test2 == 1 ~ "ws", input$test2 == 2 ~ "cp")
+      AC_type2$AC_type2 <- case_when(input$AC_type2 == 1 ~ "low", 
+                                     input$AC_type2 == 2 ~ "medium",
+                                     input$AC_type2 == 3 ~ "high", 
+                                     input$AC_type2 == 4 ~ "high_delta")
+      ACtext2$title <- case_when(input$AC_type2 == 1 ~  paste("AC:",ifelse(input$direction2 == 1, "UCL \u2265", "LCL \u2264"),input$requirement2),
+                                 input$AC_type2 == 2 ~ paste("AC: PE",ifelse(input$direction2 == 1, "\u2265", "\u2264"),input$requirement2),
+                                 input$AC_type2 == 3 ~ paste("AC:",ifelse(input$direction2 == 1, "LCL \u2265", "UCL \u2264"),input$requirement2),
+                                 input$AC_type2 == 4 ~ paste("AC:",ifelse(input$direction2 == 1, "LCL \u2265", "UCL \u2264"),input$prq_delta2,
+                                                             "and PE",ifelse(input$direction2 == 1, "\u2265", "\u2264"),input$requirement2))
+      ACtext2$subtitle=paste0(", ",ifelse(test_type2$test_type2=="ws","Wilson-Score","Clopper-Pearson"),
+                             " Interval, 2-sided \u03B1=",input$alpha2)
       selected_sample_sizes$sizes <- as.numeric(trimws(unlist(strsplit(input$sample_sizes2,","))))
       selected_sample_sizes$sizes <- selected_sample_sizes$sizes[!is.na(selected_sample_sizes$sizes)]
-      requirement2$requirement2 <- if_else(requirement_type2$requirement_type2 == "gt",
-                                           input$gt_requirement2,
-                                           input$lt_requirement2)
 
       if (requirement_type2$requirement_type2 == "gt") {
-         true_probs$true_probs <- requirement2$requirement2 - seq(0,
+         true_probs$true_probs <- requirement2$requirement2 - seq(-input$effect_size_neighborhood,
                                                                   input$effect_size_neighborhood,
                                                                   by = input$effect_size_step)
          true_probs$true_probs <- true_probs$true_probs[(true_probs$true_probs >= 0 &
                                                            (true_probs$true_probs <= 1))]
       } else {
-         true_probs$true_probs <- requirement2$requirement2 + seq(0,
+         true_probs$true_probs <- requirement2$requirement2 + seq(-input$effect_size_neighborhood,
                                                                   input$effect_size_neighborhood,
                                                                   by = input$effect_size_step)
          true_probs$true_probs <- true_probs$true_probs[(true_probs$true_probs >= 0 &
                                                            (true_probs$true_probs <= 1))]
       }
-      hypothesis_tests <- input$tests2
       add_curve_plot_data2 <- list()
-      for (sample_size in selected_sample_sizes$sizes) {
-          ws_power_calc <- sapply(true_probs$true_probs,
-                                  FUN = function(x) {
-                                    power_calc(sample_size = sample_size,
-                                      true_prob = x,
-                                      requirement = requirement2$requirement2,
-                                      alpha= input$alpha2,
-                                      requirement_type= requirement_type2$requirement_type2,
-                                      interval_type=test_type$test_type,
-                                      interval_surpasses=input$intervalSurpasses2,
-                                      point_surpasses = input$pointSurpasses2)$power
-                                  })
+      
+      withProgress(message="Calculating Power",value=0,{
+        for (sample_size in selected_sample_sizes$sizes) {
+          incProgress(1/length(selected_sample_sizes$sizes))
+          pow <- sapply(true_probs$true_probs,
+                          FUN = function(x) {
+                            power_calc(sample_size = sample_size,
+                                       true_prob = x,
+                                       requirement = requirement2$requirement2,
+                                       alpha = input$alpha2,
+                                       requirement_type = requirement_type2$requirement_type2,
+                                       interval_type = test_type2$test_type2,
+                                       AC_type = AC_type2$AC_type2,
+                                       prq_delta = prq_delta2$prq_delta2)$power
+                        })
           tmp_power_df <- data.frame(
+                requirement_type = rep(requirement_type2$requirement_type2,
+                                       length(true_probs$true_probs)),
                 requirement = rep(requirement2$requirement2,
                                   length(true_probs$true_probs)),
-                true_probs = true_probs$true_probs,
-                power = ws_power_calc,
-                test = rep(test_type$test_type,
+                sample_size = rep(sample_size, length(true_probs$true_probs)),
+                true_prob = true_probs$true_probs,
+                power = pow,
+                test = rep(ifelse(test_type2$test_type2=="ws","Wilson-Score","Clopper-Pearson"),
                            length(true_probs$true_probs)),
-                sample_size = rep(sample_size, length(true_probs$true_probs))
+                alpha_2_sided = rep(input$alpha2,length(true_probs$true_probs)),
+                AC_type = rep(AC_type2$AC_type2,length(true_probs$true_probs))
           )
           add_curve_plot_data2$curve_plot_data2[[length(add_curve_plot_data2$curve_plot_data2) + 1]] <- tmp_power_df
-    }
-    curve_plot_data2$curve_plot_data2 <- dplyr::bind_rows(add_curve_plot_data2)
+        }
+      })  
+    curve_plot_data2$curve_plot_data2 <- dplyr::bind_rows(add_curve_plot_data2$curve_plot_data2)
   },
   ignoreNULL = TRUE,
   ignoreInit = TRUE)
 
-    output$curvePlot2 <- renderPlotly({
-      validate(
-        need(dplyr::between(requirement2$requirement2, 0, 1),
-             'Requirement must be between 0 and 1'),
-        need(dplyr::between(input$effect_size_step, 0, input$effect_size_neighborhood),
-             'Effect size step must be less than effect size maximum'),
-        need(is.numeric(selected_sample_sizes$sizes),
-             'Sample sizes must be numeric.')
-      )
-      if (nrow(curve_plot_data2$curve_plot_data2) == 0) {
-        p <- ggplot() +
-          scale_x_continuous("Effect Size",
-                             limits = c(0, 1)) +
-          scale_y_continuous("Probability of Rejection",
-                             limits = c(0, 1)) +
-          theme(
-            legend.position = "none",
-            panel.grid.minor.x = element_blank()
+  output$curvePlot2 <- renderPlotly({
+    validate(
+      need(dplyr::between(requirement2$requirement2, 0, 1),
+           'Requirement must be between 0 and 1'),
+      need(dplyr::between(input$effect_size_step, 0, input$effect_size_neighborhood),
+           'Effect size step must be less than effect size maximum'),
+      need(is.numeric(selected_sample_sizes$sizes),
+           'Sample sizes must be numeric.')
+    )
+    if (nrow(curve_plot_data2$curve_plot_data2) == 0) {
+      p <- ggplot() +
+        scale_x_continuous("Effect Size",
+                           limits = c(0, 1)) +
+        scale_y_continuous(ifelse(input$FlipY2,"Pr(Pass AC)","Pr(Fail AC)"),
+                           limits = c(0, 1)) +
+        theme(
+          legend.position = "none",
+          panel.grid.minor.x = element_blank()
+        )
+      ggplotly(p)
+    }else{
+      p<- ggplot(curve_plot_data2$curve_plot_data2) +
+      	    geom_line(mapping = aes(x=true_prob,
+      	                            y=if(input$FlipY2){1-power}else{power},
+      	                            color=as.factor(sample_size))) +
+            labs(y = ifelse(input$FlipY2,"Pr(Pass AC)","Pr(Fail AC)"),
+                 x = "True Probability",
+                 title = if(input$VerboseTitle2){
+                   paste0(ACtext2$title,ACtext2$subtitle)}else{
+                   ACtext2$title}) +
+      	    theme_bw()
+      ggplotly(p) %>%
+        layout(
+          legend = list(
+            title = list(text="Sample Size",side="left"),
+            orientation = "h",
+            x=0.5,
+            xanchor="center",
+            y = -.2
           )
-        ggplotly(p)
-      } else {
-        p<- ggplot(curve_plot_data2$curve_plot_data2) +
-        	    geom_line(mapping = aes(x=true_probs,
-        	                            y=power,
-        	                            color=sample_size)) +
-              labs(y = "Probability of Rejection",
-                   x = "True Probability") +
-        	    theme_bw()
-        ggplotly(p) %>%
-          layout(
-            legend = list(
-              title = "test",
-              orientation = "h",
-              x = .4,
-              y = -.2
-            )
-          )
-      }
-    })
-    output$curvePlotData2 <- DT::renderDataTable({
+        )
+    }
+  })
+  output$curvePlotData2 <- DT::renderDataTable({
       if (nrow(curve_plot_data2$curve_plot_data2) == 0) {
         data.frame(
+          requirement_type= character(),
           requirement = numeric(),
-          true_probs = numeric(),
+          sample_size = numeric(),
+          true_prob = numeric(),
           power = numeric(),
           test = character(),
-          sample_size = numeric()
-        )
+          alpha_2_sided = character(),
+          AC_type = character())
       } else {
         curve_plot_data2$curve_plot_data2
       }
