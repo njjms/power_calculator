@@ -257,7 +257,7 @@ server <- function(input, output, session) {
                                         requirement = numeric(),
                                         sample_size = numeric(),
                                         true_prob = numeric(),
-                                        power = numeric(),
+                                        PrFailAC = numeric(),
                                         test = character(),
                                         alpha_2_sided = character(),
                                         AC_type = character()
@@ -269,7 +269,7 @@ server <- function(input, output, session) {
                                         requirement = numeric(),
                                         sample_size = numeric(),
                                         true_prob = numeric(),
-                                        power = numeric(),
+                                        PrFailAC = numeric(),
                                         test = character(),
                                         alpha_2_sided = character(),
                                         AC_type = character()
@@ -332,7 +332,7 @@ server <- function(input, output, session) {
             requirement = rep(requirement$requirement,length(sample_sizes)),
             sample_size = sample_sizes,
             true_prob = rep(truep,length(sample_sizes)),
-            power = pow,
+            PrFailAC = pow,
             test = rep(ifelse(test_type$test_type=="ws","Wilson-Score","Clopper-Pearson"),
                        length(sample_sizes)),
             alpha_2_sided = rep(input$alpha,length(sample_sizes)),
@@ -370,17 +370,24 @@ server <- function(input, output, session) {
         )
       ggplotly(p)
     } else {
-      p<- ggplot(curve_plot_data$curve_plot_data) +
-      	    geom_line(mapping = aes(x=sample_size,
-      	                            y=if(input$FlipY){1-power}else{power},
-      	                            color=as.factor(true_prob))) +
+      p<- ggplot(curve_plot_data$curve_plot_data,
+                 mapping = aes(x=sample_size,
+                               y=if(input$FlipY){1-PrFailAC}else{PrFailAC},
+                               color=as.factor(true_prob),
+                               text = paste(
+                                 "Sample Size:", sample_size,
+                                 ifelse(input$FlipY,"<br>Pr(Pass AC):","<br>Pr(Fail AC):"),
+                                 if(input$FlipY){round(1-PrFailAC,4)}else{round(PrFailAC,4)},
+                                 "<br>True Prob:",true_prob)
+                 )) +
+      	    geom_line(group=1) +
             labs(y = ifelse(input$FlipY,"Pr(Pass AC)","Pr(Fail AC)"),
                  x = "Sample Size",
                  title = if(input$VerboseTitle){
                    paste0(ACtext$title,ACtext$subtitle)}else{
                      ACtext$title}) +
       	    theme_bw()
-      ggplotly(p) %>%
+      ggplotly(p, tooltip="text") %>%
         layout(
           legend = list(
             title = list(text="True Probability",side="left"),
@@ -399,7 +406,7 @@ server <- function(input, output, session) {
         requirement = numeric(),
         sample_size = numeric(),
         true_prob = numeric(),
-        power = numeric(),
+        PrFailAC = numeric(),
         test = character(),
         alpha_2_sided = character(),
         AC_type = character())
@@ -485,7 +492,7 @@ server <- function(input, output, session) {
                                   length(true_probs$true_probs)),
                 sample_size = rep(sample_size, length(true_probs$true_probs)),
                 true_prob = true_probs$true_probs,
-                power = pow,
+                PrFailAC = pow,
                 test = rep(ifelse(test_type2$test_type2=="ws","Wilson-Score","Clopper-Pearson"),
                            length(true_probs$true_probs)),
                 alpha_2_sided = rep(input$alpha2,length(true_probs$true_probs)),
@@ -520,17 +527,23 @@ server <- function(input, output, session) {
         )
       ggplotly(p)
     }else{
-      p<- ggplot(curve_plot_data2$curve_plot_data2) +
-      	    geom_line(mapping = aes(x=true_prob,
-      	                            y=if(input$FlipY2){1-power}else{power},
-      	                            color=as.factor(sample_size))) +
+      p<- ggplot(curve_plot_data2$curve_plot_data2,
+                 mapping = aes(x=true_prob,
+                               y=if(input$FlipY2){1-PrFailAC}else{PrFailAC},
+                               color=as.factor(sample_size),
+                               text = paste("True Prob:", true_prob,
+                                            ifelse(input$FlipY2,"<br>Pr(Pass AC):","<br>Pr(Fail AC):"),
+                                            if(input$FlipY2){round(1-PrFailAC,4)}else{round(PrFailAC,4)},
+                                            "<br>Sample Size:",sample_size))
+                 ) +
+      	    geom_line(group=1) +
             labs(y = ifelse(input$FlipY2,"Pr(Pass AC)","Pr(Fail AC)"),
                  x = "True Probability",
                  title = if(input$VerboseTitle2){
                    paste0(ACtext2$title,ACtext2$subtitle)}else{
                    ACtext2$title}) +
       	    theme_bw()
-      ggplotly(p) %>%
+      ggplotly(p, tooltip = "text") %>%
         layout(
           legend = list(
             title = list(text="Sample Size",side="left"),
@@ -549,7 +562,7 @@ server <- function(input, output, session) {
           requirement = numeric(),
           sample_size = numeric(),
           true_prob = numeric(),
-          power = numeric(),
+          PrFailAC = numeric(),
           test = character(),
           alpha_2_sided = character(),
           AC_type = character())
