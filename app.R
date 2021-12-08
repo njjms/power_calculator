@@ -1,6 +1,6 @@
 # This Shiny web application uses the Natera "biostatslib" R package
 # This package can be downloaded via devtools::install_git("ssh://git@stash.natera.com:7999/~nsun/biostatslib.git")
-# Must be connected to the VPN and have SSH keys enabled on Natera stash account 
+# Must be connected to the VPN and have SSH keys enabled on Natera stash account
 
 library(shiny)
 library(shinyWidgets)
@@ -278,7 +278,7 @@ server <- function(input, output, session) {
   #
   # Sample size calculator server components
   #
-  
+
   selected_true_ps <- reactiveValues(true_ps = 0.95)
   requirement <- reactiveValues(requirement = NA)
   requirement_type <- reactiveValues(requirement_type = NA)
@@ -287,7 +287,7 @@ server <- function(input, output, session) {
   prq_delta <- reactiveValues(prq_delta = 0.94)
   ACtext <- reactiveValues(title = "")
   ACtext <- reactiveValues(subtitle = "")
-  
+
 
   observeEvent(
     input$run_calculation, {
@@ -295,9 +295,9 @@ server <- function(input, output, session) {
       requirement$requirement <- input$requirement
       prq_delta$prq_delta <- input$prq_delta
       test_type$test_type <- case_when(input$test == 1 ~ "ws", input$test == 2 ~ "cp")
-      AC_type$AC_type <- case_when(input$AC_type == 1 ~ "low", 
+      AC_type$AC_type <- case_when(input$AC_type == 1 ~ "low",
                                    input$AC_type == 2 ~ "medium",
-                                   input$AC_type == 3 ~ "high", 
+                                   input$AC_type == 3 ~ "high",
                                    input$AC_type == 4 ~ "high_delta")
       ACtext$title <- case_when(input$AC_type == 1 ~  paste("AC:",ifelse(input$direction == 1, "UCL \u2265", "LCL \u2264"),input$requirement),
                                 input$AC_type == 2 ~ paste("AC: PE",ifelse(input$direction == 1, "\u2265", "\u2264"),input$requirement),
@@ -306,15 +306,15 @@ server <- function(input, output, session) {
                                                            "and PE",ifelse(input$direction == 1, "\u2265", "\u2264"),input$requirement))
       ACtext$subtitle=paste0(", ",ifelse(test_type$test_type=="ws","Wilson-Score","Clopper-Pearson"),
                              " Interval, 2-sided \u03B1=",input$alpha)
-      
+
       selected_true_ps$true_ps <- as.numeric(trimws(unlist(strsplit(input$true_p,","))))
       selected_true_ps$true_ps <- selected_true_ps$true_ps[!is.na(selected_true_ps$true_ps)]
       sample_sizes <- seq(input$n_minimum, input$n_maximum, by=input$step)
       add_curve_plot_data <- list()
-      
+
       withProgress(message="Calculating Power",value=0,{
-        for(truep in selected_true_ps$true_ps){ 
-          incProgress(1/length(selected_true_ps$true_ps)) 
+        for(truep in selected_true_ps$true_ps){
+          incProgress(1/length(selected_true_ps$true_ps))
           pow <- sapply(sample_sizes,
                         FUN = function(x) {
                           pw = power_calc(sample_size = x,
@@ -341,7 +341,7 @@ server <- function(input, output, session) {
           add_curve_plot_data$curve_plot_data[[length(add_curve_plot_data$curve_plot_data) + 1]] <- tmp_power_df
         }
       })
-      
+
       curve_plot_data$curve_plot_data <- dplyr::bind_rows(add_curve_plot_data$curve_plot_data)
      },
      ignoreNULL = TRUE,
@@ -442,9 +442,9 @@ server <- function(input, output, session) {
       requirement2$requirement2 <- input$requirement2
       prq_delta2$prq_delta2 <- input$prq_delta2
       test_type2$test_type2 <- case_when(input$test2 == 1 ~ "ws", input$test2 == 2 ~ "cp")
-      AC_type2$AC_type2 <- case_when(input$AC_type2 == 1 ~ "low", 
+      AC_type2$AC_type2 <- case_when(input$AC_type2 == 1 ~ "low",
                                      input$AC_type2 == 2 ~ "medium",
-                                     input$AC_type2 == 3 ~ "high", 
+                                     input$AC_type2 == 3 ~ "high",
                                      input$AC_type2 == 4 ~ "high_delta")
       ACtext2$title <- case_when(input$AC_type2 == 1 ~  paste("AC:",ifelse(input$direction2 == 1, "UCL \u2265", "LCL \u2264"),input$requirement2),
                                  input$AC_type2 == 2 ~ paste("AC: PE",ifelse(input$direction2 == 1, "\u2265", "\u2264"),input$requirement2),
@@ -470,7 +470,7 @@ server <- function(input, output, session) {
                                                            (true_probs$true_probs <= 1))]
       }
       add_curve_plot_data2 <- list()
-      
+
       withProgress(message="Calculating Power",value=0,{
         for (sample_size in selected_sample_sizes$sizes) {
           incProgress(1/length(selected_sample_sizes$sizes))
@@ -500,7 +500,7 @@ server <- function(input, output, session) {
           )
           add_curve_plot_data2$curve_plot_data2[[length(add_curve_plot_data2$curve_plot_data2) + 1]] <- tmp_power_df
         }
-      })  
+      })
     curve_plot_data2$curve_plot_data2 <- dplyr::bind_rows(add_curve_plot_data2$curve_plot_data2)
   },
   ignoreNULL = TRUE,

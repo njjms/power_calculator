@@ -1,5 +1,4 @@
 ### Sample Size Calculator
-Prince waz here!!!
 
 In this tab, the goal is to find appropriate sample sizes for the problem at hand.
 
