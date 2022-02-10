@@ -378,6 +378,7 @@ ui <- dashboardPage(
                    textOutput("single_sample_size_power"),
                    textOutput("single_sample_size_max_misses"),
                    br(),
+                   plotlyOutput(outputId = "curvePlot3"),
                    DT::dataTableOutput(outputId = "single_sample_size_data")
                 )
               )
@@ -793,10 +794,70 @@ server <- function(input, output, session) {
   output$single_sample_size_max_misses <- renderText(
     if (nrow(single_sample_size_data$single_sample_size_data) == 0) {
       "Maximum Incorrect Samples Before Failure: N/A"
+    } else if (single_sample_size_data$max_misses == -1) {
+      paste0("Maximum Incorrect Samples Before Failure: Cannot pass AC at this sample size.")
     } else {
       paste0("Maximum Incorrect Samples Before Failure: ", single_sample_size_data$max_misses)
     }
   )
+  
+  output$curvePlot3 <- renderPlotly({
+    validate(
+      need(input$sample_size3 > 0,
+           'Sample size must be greater than 0.'),
+      need(dplyr::between(input$alpha3, 0, 1),
+           'Significance level must be between 0 and 1')
+    )
+    if (nrow(single_sample_size_data$single_sample_size_data) == 0) {
+      p <- ggplot() +
+        scale_x_continuous("Sample Size",
+                           limits = c(0, 100)) +
+        scale_y_continuous("Confidence Limits",
+                           limits = c(0, 1)) +
+        theme(
+          legend.position = "none",
+          panel.grid.minor.x = element_blank()
+        )
+      ggplotly(p)
+    } else {
+      p <- ggplot(single_sample_size_data$single_sample_size_data,
+                  mapping = aes(text = paste("Point Estimate:", obs, "/", sample_size3$sample_size3,
+                                             "(", point, ")",
+                                             "<br>UCL:", round(upper_bound, 5),
+                                             "<br>LCL:", round(lower_bound, 5)))
+                  ) +
+        geom_point(mapping = aes(x = obs, y = point),
+                   size = .7) +
+        geom_segment(mapping = aes(x = obs, xend = obs, 
+                                   y = lower_bound, yend = upper_bound),
+                     alpha = .3) +
+        geom_hline(yintercept = requirement3$requirement3,
+                   linetype = "dotted",
+                   size = .3,
+                   alpha = .9,
+                   color = "#FF6600") +
+        labs(x = "Number of Correct Calls",
+             y = "Point Estimate and Confidence Limits") +
+  	    theme_bw()
+        if (AC_type3$AC_type3 == "high_delta") {
+          p <- p + geom_hline(yintercept = prq_delta3$prq_delta3,
+                              linetype = "dotted",
+                              size = .3,
+                              alpha = .4,
+                              color = "#FF6600")
+        }
+      ggplotly(p, tooltip="text") %>%
+        layout(
+          legend = list(
+            title = list(text="PE and CLs",side="left"),
+            orientation = "h",
+            x=0.5,
+            xanchor="center",
+            y = -.2
+          )
+        )
+    }
+  })
   
   output$single_sample_size_data <- DT::renderDataTable({
       validate(

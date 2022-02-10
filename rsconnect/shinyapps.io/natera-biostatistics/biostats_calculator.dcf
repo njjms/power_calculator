@@ -1,0 +1,13 @@
+name: biostats_calculator
+title: biostats_calculator
+username:
+account: natera-biostatistics
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5166501
+bundleId: 5532820
+url: https://natera-biostatistics.shinyapps.io/biostats_calculator/
+when: 1643761795.34174
+lastSyncTime: 1643761795.34175
+asMultiple: FALSE
+asStatic: FALSE
