@@ -779,6 +779,7 @@ server <- function(input, output, session) {
                                           AC_type = AC_type3$AC_type3,
                                           prq_delta = prq_delta3$prq_delta3)
       single_sample_size_data$single_sample_size_data <- single_sample_size_df$df
+      single_sample_size_data$single_sample_size_data$cumulative_probability <- cumsum(single_sample_size_df$df$prob)
       single_sample_size_data$power <- single_sample_size_df$power
       single_sample_size_data$max_misses <- nrow(single_sample_size_df$df[single_sample_size_df$df$pass == 1,]) - 1
    })
@@ -824,7 +825,8 @@ server <- function(input, output, session) {
                   mapping = aes(text = paste("Point Estimate:", obs, "/", sample_size3$sample_size3,
                                              "(", point, ")",
                                              "<br>UCL:", round(upper_bound, 5),
-                                             "<br>LCL:", round(lower_bound, 5)))
+                                             "<br>LCL:", round(lower_bound, 5),
+                                             "<br>CDF(x):", round(cumulative_probability*100, 5), "%"))
                   ) +
         geom_point(mapping = aes(x = obs, y = point),
                    size = .7) +
