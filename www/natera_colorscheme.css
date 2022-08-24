@@ -1,0 +1,41 @@
+/* CSS to set Natera colors :D */
+/* logo */
+.skin-blue .main-header .logo {
+  background-color: #0a394d;
+}
+
+/* logo when hovered */
+.skin-blue .main-header .logo:hover {
+  background-color: #0a394d;
+}
+
+/* navbar (rest of the header) */
+.skin-blue .main-header .navbar {
+  background-color: #0a394d;
+}        
+
+/* main sidebar */
+.skin-blue .main-sidebar {
+    background-color: #0a394d;
+}
+
+/* active selected tab in the sidebarmenu */
+.skin-blue .main-sidebar .sidebar .sidebar-menu .active a{
+  background-color: #9bcb3c;
+}
+
+/* other links in the sidebarmenu */
+.skin-blue .main-sidebar .sidebar .sidebar-menu a{
+  background-color: #049bdb;
+  color: #000000;
+}
+
+/* other links in the sidebarmenu when hovered */
+.skin-blue .main-sidebar .sidebar .sidebar-menu a:hover{
+  background-color: #9bcb3c;
+}
+
+/* toggle button when hovered  */                    
+.skin-blue .main-header .navbar .sidebar-toggle:hover{
+  background-color: #0a394d;
+}
