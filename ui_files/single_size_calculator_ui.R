@@ -83,16 +83,17 @@ single_size_calculator_ui <-
                       min = 0,
                       max = 1
                     )
-                  ),
-                  actionButton(inputId = "run_calculation3",
-                               label = "Calculate"),
+                  )
+                  # Removing action button to incorporate more reactivity
+                  # actionButton(inputId = "run_calculation3",
+                  #              label = "Calculate"),
                 ),
                 mainPanel(
                    textOutput("single_sample_size_power"),
                    textOutput("single_sample_size_max_misses"),
                    br(),
                    plotlyOutput(outputId = "curvePlot3"),
-                   DT::dataTableOutput(outputId = "single_sample_size_data")
+                   DT::dataTableOutput(outputId = "single_sample_size_dt")
                 )
               )
       ) # end of single sample size calculator tab

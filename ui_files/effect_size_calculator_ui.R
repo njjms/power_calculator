@@ -49,20 +49,20 @@ effect_size_calculator_ui <-
                   # Effect size
                   #
                   sliderInput(
-                    inputId = "effect_size_neighborhood",
-                    label = "Select effect size range",
-                    value = .1,
-                    min = 0,
-                    max = .2
+                    inputId = "effect_size_range",
+                    label = "Select effect size range around requirement",
+                    min = -.1,
+                    max = .1,
+                    value = c(-.05, .05)
                   ),
                   #
                   # Select effect size step
                   #
-                  numericInput(
-                    inputId = "effect_size_step",
-                    label = "Effect size step intervals",
-                    value = .01
-                  ),
+                  # numericInput(
+                  #   inputId = "effect_size_step",
+                  #   label = "Effect size step intervals",
+                  #   value = .01
+                  # ),
                   #
                   # Effect size hypothesis test options
                   #

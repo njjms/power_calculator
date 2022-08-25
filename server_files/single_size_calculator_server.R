@@ -2,82 +2,68 @@
 # Single Size Calculator server components
 #
 # Initiate reactive values
-single_sample_size_data <- reactiveValues(single_sample_size_data =
-                                          data.frame(
-                                           	obs = numeric(),
-                                           	point= numeric(),
-                                           	prob= numeric(),
-                                           	lower_bound = numeric(),
-                                           	upper_bound = numeric(),
-                                           	pass = logical()
-                                          ),
-                                          power = numeric(),
-                                          max_misses = numeric())
+blank_df <- data.frame(n_successes = numeric(),
+ 	                     point_estimate = numeric(),
+ 	                     binom_prob = numeric(),
+ 	                     lower_bound = numeric(),
+ 	                     upper_bound = numeric(),
+ 	                     pass = logical())
 
-true_probability <- reactiveValues(true_probability = .90)
-sample_size3 <- reactiveValues(sample_size3 = 100)
-requirement3 <- reactiveValues(requirement3 = .95)
-direction3 <- reactiveValues(direction3 = NA)
-test3 <- reactiveValues(test3 = "ws")
-AC_type3 <- reactiveValues(AC_type3 = "medium")
-prq_delta3 <- reactiveValues(prq_delta3 = 0.94)
-alpha3 <- reactiveValues(alpha3 = 0.05)
+direction3 <- reactive({if_else(input$direction3 == 1, "gt", "lt")})
+test3 <- reactive({case_when(input$test3 == 1 ~ "ws",
+                             input$test3 == 2 ~ "cp")})
+AC_type3 <- reactive({case_when(input$AC_type3 == 1 ~ "low",
+                                input$AC_type3 == 2 ~ "medium",
+                                input$AC_type3 == 3 ~ "high",
+                                input$AC_type3 == 4 ~ "high_delta")})
 
 # Calculate
-observeEvent(input$run_calculation3, {
-    direction3$direction3 <- if_else(input$direction3 == 1, "gt", "lt")
-    requirement3$requirement3 <- input$requirement3
-    alpha3$alpha3 <- input$alpha3
-    test3$test3 <- case_when(input$test3 == 1 ~ "ws", input$test3 == 2 ~ "cp")
-    sample_size3$sample_size3 <- input$sample_size3
-    true_probability$true_probability <- input$true_probability
-    AC_type3$AC_type3 <- case_when(input$AC_type3 == 1 ~ "low",
-                                   input$AC_type3 == 2 ~ "medium",
-                                   input$AC_type3 == 3 ~ "high",
-                                   input$AC_type3 == 4 ~ "high_delta")
-    prq_delta3$prq_delta3 <- input$prq_delta3
+single_sample_size_data <- reactive({
+    tmp <- power_calc(sample_size = input$sample_size3,
+                      true_prob = input$true_probability,
+                      requirement = input$requirement3,
+                      alpha = input$alpha3,
+                      requirement_type = direction3(),
+                      interval_type = test3(),
+                      AC_type = AC_type3(),
+                      prq_delta = input$prq_delta3)
+    tmp$df$cumulative_probability <- cumsum(tmp$df$prob)
+    tmp$df$n_successes <- tmp$df$obs
+    tmp$df$point_estimate <- tmp$df$point
+    tmp$df$binom_prob <- tmp$df$prob
     
-    single_sample_size_df <- power_calc(sample_size = sample_size3$sample_size3,
-                                        true_prob = true_probability$true_probability,
-                                        requirement = requirement3$requirement3,
-                                        alpha = alpha3$alpha3,
-                                        requirement_type = direction3$direction3,
-                                        interval_type = test3$test3,
-                                        AC_type = AC_type3$AC_type3,
-                                        prq_delta = prq_delta3$prq_delta3)
-    single_sample_size_data$single_sample_size_data <- single_sample_size_df$df
-    single_sample_size_data$single_sample_size_data$cumulative_probability <- cumsum(single_sample_size_df$df$prob)
-    single_sample_size_data$power <- single_sample_size_df$power
-    single_sample_size_data$max_misses <- nrow(single_sample_size_df$df[single_sample_size_df$df$pass == 1,]) - 1
- })
+    tmp[["max_misses"]] <- nrow(tmp$df[tmp$df$pass == 1,]) - 1
+    
+    # return reactive
+    tmp
+})
 
 output$single_sample_size_power <- renderText(
-  if (nrow(single_sample_size_data$single_sample_size_data) == 0) {
+  if (nrow(single_sample_size_data()$df) == 0) {
     "Power: N/A"
   } else {
-    paste0("Probability of Failing AC: ", round(single_sample_size_data$power*100, 5), "%")
+    paste0("Probability of Failing AC: ", round(single_sample_size_data()$power*100, 5), "%")
   }
 )
 
 output$single_sample_size_max_misses <- renderText(
-  if (nrow(single_sample_size_data$single_sample_size_data) == 0) {
+  if (nrow(single_sample_size_data()$df) == 0) {
     "Maximum Incorrect Samples Before Failure: N/A"
-  } else if (single_sample_size_data$max_misses == -1) {
+  } else if (single_sample_size_data()$max_misses == -1) {
     paste0("Maximum Incorrect Samples Before Failure: Cannot pass AC at this sample size.")
   } else {
-    paste0("Maximum Incorrect Samples Before Failure: ", single_sample_size_data$max_misses)
+    paste0("Maximum Incorrect Samples Before Failure: ", single_sample_size_data()$max_misses)
   }
 )
 
 # Render plot
 output$curvePlot3 <- renderPlotly({
-  validate(
-    need(input$sample_size3 > 0,
-         'Sample size must be greater than 0.'),
-    need(dplyr::between(input$alpha3, 0, 1),
-         'Significance level must be between 0 and 1')
-  )
-  if (nrow(single_sample_size_data$single_sample_size_data) == 0) {
+  validate(need(input$sample_size3 > 0,
+                'Sample size must be greater than 0.'),
+           need(dplyr::between(input$alpha3, 0, 1),
+                'Significance level must be between 0 and 1'))
+  
+  if (nrow(single_sample_size_data()$df) == 0) {
     p <- ggplot() +
       scale_x_continuous("Sample Size",
                          limits = c(0, 100)) +
@@ -89,19 +75,21 @@ output$curvePlot3 <- renderPlotly({
       )
     ggplotly(p)
   } else {
-    p <- ggplot(single_sample_size_data$single_sample_size_data,
-                mapping = aes(text = paste("Point Estimate:", obs, "/", sample_size3$sample_size3,
-                                           "(", point, ")",
-                                           "<br>UCL:", round(upper_bound, 5),
-                                           "<br>LCL:", round(lower_bound, 5),
-                                           "<br>CDF(x):", round(cumulative_probability*100, 5), "%"))
-                ) +
-      geom_point(mapping = aes(x = obs, y = point),
+    p <- ggplot(single_sample_size_data()$df,
+                mapping = aes(
+                  text = paste("Point Estimate:", n_successes,
+                               "/", input$sample_size3,
+                               "(", point, ")",
+                               "<br>UCL:", round(upper_bound, 5),
+                               "<br>LCL:", round(lower_bound, 5),
+                               "<br>CDF(x):", round(cumulative_probability*100, 5), "%"))) +
+      geom_point(mapping = aes(x = n_successes,
+                               y = point_estimate),
                  size = .7) +
-      geom_segment(mapping = aes(x = obs, xend = obs, 
+      geom_segment(mapping = aes(x = n_successes, xend = n_successes, 
                                  y = lower_bound, yend = upper_bound),
                    alpha = .3) +
-      geom_hline(yintercept = requirement3$requirement3,
+      geom_hline(yintercept = input$requirement3,
                  linetype = "dotted",
                  size = .3,
                  alpha = .9,
@@ -109,45 +97,38 @@ output$curvePlot3 <- renderPlotly({
       labs(x = "Number of Correct Calls",
            y = "Point Estimate and Confidence Limits") +
 	    theme_bw()
-      if (AC_type3$AC_type3 == "high_delta") {
-        p <- p + geom_hline(yintercept = prq_delta3$prq_delta3,
+      if (AC_type3() == "high_delta") {
+        p <- p + geom_hline(yintercept = input$prq_delta3,
                             linetype = "dotted",
                             size = .3,
                             alpha = .4,
                             color = "#FF6600")
       }
-    ggplotly(p, tooltip="text") %>%
+    ggplotly(p, tooltip = "text") %>%
       layout(
         legend = list(
-          title = list(text="PE and CLs",side="left"),
+          title = list(text = "PE and CLs",
+                       side = "left"),
           orientation = "h",
-          x=0.5,
-          xanchor="center",
-          y = -.2
-        )
+          x = 0.5,
+          xanchor = "center",
+          y = -.2)
       )
   }
 })
 
 # Render datatable
-output$single_sample_size_data <- DT::renderDataTable({
+output$single_sample_size_dt <- DT::renderDataTable({
     validate(
-      need(dplyr::between(requirement3$requirement3, 0, 1),
+      need(dplyr::between(input$requirement3, 0, 1),
            'Requirement must be between 0 and 1'),
-      need(is.numeric(sample_size3$sample_size3),
+      need(is.numeric(input$sample_size3),
            'Sample size must be numeric.')
     )
-    if (nrow(single_sample_size_data$single_sample_size_data) == 0) {
-      data.frame(
-      	obs = numeric(),
-      	point= numeric(),
-      	prob= numeric(),
-      	lower_bound = numeric(),
-      	upper_bound = numeric(),
-      	pass = logical()
-      )
+    if (nrow(single_sample_size_data()$df) == 0) {
+      blank_df
     } else {
-      single_sample_size_data$single_sample_size_data
+      single_sample_size_data()$df
     }
   },
   extensions = c("Buttons", "Scroller"),
