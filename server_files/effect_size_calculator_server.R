@@ -11,6 +11,12 @@ curve_plot_data2 <- reactiveValues(df = effect_size_blank_df)
 
 requirement_type2 <- reactive({if_else(input$direction2 == 1, "gt", "lt")})
 
+requirement2 <- eventReactive(input$run_calculation2, {
+  # Uses eventReactive since plot draws vertical line at specified requirement
+  input$requirement2
+})
+
+
 test_type2 <- reactive({case_when(input$test2 == 1 ~ "ws",
                                   input$test2 == 2 ~ "cp")})
 
@@ -84,7 +90,7 @@ observeEvent(input$run_calculation2, {
                       FUN = function(x) {
                         power_calc(sample_size = s,
                                    true_prob = x,
-                                   requirement = input$requirement2,
+                                   requirement = requirement2(),
                                    alpha = input$alpha2,
                                    requirement_type = requirement_type2(),
                                    interval_type = test_type2(),
@@ -135,7 +141,7 @@ output$curvePlot2 <- renderPlotly({
                                   },
                               color = as.factor(sample_size),
                               text = paste("True Prob:", 
-                                           round(true_prob, 5)*100, "%",
+                                           round(true_prob, 5),
                                            ifelse(input$FlipY2, 
                                                   "<br>Pr(Pass AC):",
                                                   "<br>Pr(Fail AC):"),
@@ -147,7 +153,7 @@ output$curvePlot2 <- renderPlotly({
                                            "<br>Sample Size:",
                                            sample_size))) +
     	    geom_line(group = 1) +
-          geom_vline(xintercept = input$requirement2, 
+          geom_vline(xintercept = requirement2(), 
                      linetype = "dotted",
                      size = .3,
                      alpha = .7) +

@@ -28,13 +28,13 @@ ui <- dashboardPage(
     ),
     dashboardSidebar(
       sidebarMenu(
-        menuItem("Sample Size Calculator",
+        menuItem("Explore Sample Sizes",
                  tabName = "sample_size_calculator",
                  icon = icon("king", lib = "glyphicon", verify_fa = FALSE)),
-        menuItem("Effect Size Calculator",
+        menuItem("Explore Effect Sizes",
                  tabName = "effect_size_calculator",
                  icon = icon("queen", lib = "glyphicon", verify_fa = FALSE)),
-        menuItem("Single Size Calculator",
+        menuItem("Visualize CIs",
                  tabName = "single_size_calculator",
                  icon = icon("pawn", lib = "glyphicon", verify_fa = FALSE)),
         menuItem("Help Page",

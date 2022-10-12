@@ -61,8 +61,11 @@ output$curvePlot3 <- renderPlotly({
   validate(need(input$sample_size3 > 0,
                 'Sample size must be greater than 0.'),
            need(dplyr::between(input$alpha3, 0, 1),
-                'Significance level must be between 0 and 1'))
-  
+                'Significance level must be between 0 and 1'),
+           need(is.numeric(input$requirement3),
+                'Enter a numeric value for requirement.'),
+           need(is.numeric(input$sample_size3),
+                'Enter a numeric value for sample_size.'))
   if (nrow(single_sample_size_data()$df) == 0) {
     p <- ggplot() +
       scale_x_continuous("Sample Size",
@@ -119,12 +122,14 @@ output$curvePlot3 <- renderPlotly({
 
 # Render datatable
 output$single_sample_size_dt <- DT::renderDataTable({
-    validate(
-      need(dplyr::between(input$requirement3, 0, 1),
-           'Requirement must be between 0 and 1'),
-      need(is.numeric(input$sample_size3),
-           'Sample size must be numeric.')
-    )
+  validate(need(input$sample_size3 > 0,
+                'Sample size must be greater than 0.'),
+           need(dplyr::between(input$alpha3, 0, 1),
+                'Significance level must be between 0 and 1'),
+           need(is.numeric(input$requirement3),
+                'Enter a numeric value for requirement.'),
+           need(is.numeric(input$sample_size3),
+                'Enter a numeric value for sample_size.'))
     if (nrow(single_sample_size_data()$df) == 0) {
       blank_df
     } else {

@@ -11,8 +11,8 @@ curve_plot_data <- reactiveValues(df = sample_size_blank_df)
                                     
 requirement_type <- reactive({if_else(input$direction == 1, "gt", "lt")})
 
-test_type <- reactive({case_when(input$test2 == 1 ~ "ws",
-                                  input$test2 == 2 ~ "cp")})
+test_type <- reactive({case_when(input$test == 1 ~ "ws",
+                                 input$test == 2 ~ "cp")})
 
 AC_type_full <- reactive({case_when(input$AC_type == 1 ~ "low",
                                     input$AC_type == 2 ~ "medium",

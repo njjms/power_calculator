@@ -4,7 +4,7 @@
 
 single_size_calculator_ui <- 
       tabItem(tabName = "single_size_calculator",
-              titlePanel("Single Size Calculator"),
+              titlePanel("Visualize CIs for a specific scenario"),
               sidebarLayout(
                 sidebarPanel(
                    #
@@ -89,8 +89,8 @@ single_size_calculator_ui <-
                   #              label = "Calculate"),
                 ),
                 mainPanel(
-                   textOutput("single_sample_size_power"),
-                   textOutput("single_sample_size_max_misses"),
+                   h4(textOutput("single_sample_size_power")),
+                   h4(textOutput("single_sample_size_max_misses")),
                    br(),
                    plotlyOutput(outputId = "curvePlot3"),
                    DT::dataTableOutput(outputId = "single_sample_size_dt")

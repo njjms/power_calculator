@@ -9,6 +9,7 @@ library(tidyverse)
 library(plotly)
 library(DT)
 library(shinydashboard)
+library(markdown)
 
 # Source ui and server functions
 source("ui.R")
