@@ -86,8 +86,8 @@ effect_size_calculator_ui <-
                   sliderInput(
                     inputId = "effect_size_range",
                     label = "Select effect size range around requirement",
-                    min = -.1,
-                    max = .1,
+                    min = -.25,
+                    max = .25,
                     value = c(-.05, .05)
                   ),
                   actionButton(inputId = "run_calculation2",

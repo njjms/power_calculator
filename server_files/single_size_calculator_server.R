@@ -16,13 +16,15 @@ AC_type3 <- reactive({case_when(input$AC_type3 == 1 ~ "low",
                                 input$AC_type3 == 2 ~ "medium",
                                 input$AC_type3 == 3 ~ "high",
                                 input$AC_type3 == 4 ~ "high_delta")})
+sample_size3 <- reactive({input$sample_size3})
+alpha3 <- reactive({input$alpha3})
 
 # Calculate
 single_sample_size_data <- reactive({
-    tmp <- power_calc(sample_size = input$sample_size3,
+    tmp <- power_calc(sample_size = sample_size3(),
                       true_prob = input$true_probability,
                       requirement = input$requirement3,
-                      alpha = input$alpha3,
+                      alpha = alpha3(),
                       requirement_type = direction3(),
                       interval_type = test3(),
                       AC_type = AC_type3(),
@@ -33,6 +35,14 @@ single_sample_size_data <- reactive({
     tmp$df$binom_prob <- tmp$df$prob
     
     tmp[["max_misses"]] <- nrow(tmp$df[tmp$df$pass == 1,]) - 1
+    if (direction3() == "gt") {
+      max_misses_row <- tmp$df[tmp$df$n_successes == (sample_size3() - tmp[["max_misses"]]),]
+    } else {
+      max_misses_row <- tmp$df[tmp$df$n_successes == tmp[["max_misses"]],]
+    }
+    tmp[["max_point_estimate"]] <- max_misses_row$point
+    tmp[["max_upper_ci"]] <- max_misses_row$upper_bound
+    tmp[["max_lower_ci"]] <- max_misses_row$lower_bound
     
     # return reactive
     tmp
@@ -52,7 +62,11 @@ output$single_sample_size_max_misses <- renderText(
   } else if (single_sample_size_data()$max_misses == -1) {
     paste0("Maximum Incorrect Samples Before Failure: Cannot pass AC at this sample size.")
   } else {
-    paste0("Maximum Incorrect Samples Before Failure: ", single_sample_size_data()$max_misses)
+      # paste0("Maximum Incorrect Samples Before Failure: ", single_sample_size_data()$max_misses)
+      paste0("Maximum Incorrect Samples Before Failure: ", single_sample_size_data()$max_misses,
+             "  -- PE: ", round(single_sample_size_data()$max_point_estimate, 4),
+             " (", round(single_sample_size_data()$max_lower_ci, 4),
+             ", ", round(single_sample_size_data()$max_upper_ci, 4), ")")
   }
 )
 
